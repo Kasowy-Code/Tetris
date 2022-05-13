@@ -38,35 +38,45 @@ Mino::Mino(Colors color, int X, int Y, const sf::Texture &texture)
     this->Y = Y;
     this->block.setTexture(texture);
     this->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+    this->block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
 }
 
 
 void Mino::Move(Directions direction) {
     switch (direction) {
     case down:
-        if (this->Y < PlayAreaHeight) {
+        if (this->Y < PlayAreaHeight-1) {
             this->Y++;
             block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
         }
         break;
     case right:
-        if (this->X < PlayAreaWidth) {
+        if (this->X < PlayAreaWidth-1 && MapPlaces[this->getPositionX()+1][this->getPositionY()] != true) {
             this->X++;
-            block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y*32.0f));
+            block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
+        }
+        else {
+            throw ("error");
         }
         break;
     case left:
-        if (this->X > 0) {
+        if (this->X > 0 && MapPlaces[this->getPositionX() - 1][this->getPositionY()] != true) {
             X--;
             block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
         }
+        else {
+            throw ("Error");
+        }
         break;
     case hardDrop:
-        for (int i = 20; i > 0; i--) {
-            if (MapPlaces[this->getPositionX()][i] != true) {
-                this->Y = i;
-                break;
-            }
+        for (int i = this->getPositionY(); i < 20; i++) {
+                if (MapPlaces[this->getPositionX()][i+1] == true || i == 19) {
+                    std::cout << "I: " << i << std::endl;
+                    this->Y = i;
+                    MapPlaces[this->getPositionX()][this->getPositionY()] = true;
+                    break;
+                }
+            
         }
         block.setPosition(sf::Vector2f(this->X*32.0f, this->Y*32.0f));
         break;
@@ -94,7 +104,9 @@ int main()
     texture.loadFromFile("../../assets/TileTextures.png");
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Tetris");
     bool isDropping = true;
-    //Mino mino(green, 0, 0, texture);
+    //Mino* test = new Mino(purple, 5, 7, texture);
+    //MapPlaces[5][7] = true;
+    //Minos.push_back(test);
     sf::Clock clock;
     int count = 0;
     while (window.isOpen())
@@ -114,7 +126,7 @@ int main()
             sf::Event event;
             sf::Time time = clock.getElapsedTime();
             if (time.asMilliseconds() >= 400) {
-                if(MapPlaces[mino->getPositionX()][mino->getPositionY() + 1] == false && mino->getPositionY() != 20) {
+                if(MapPlaces[mino->getPositionX()][mino->getPositionY() + 1] == false && mino->getPositionY() != PlayAreaHeight-1) {
                     mino->Move(down);
                 }
                 else {
@@ -145,10 +157,16 @@ int main()
                         }
                         break;
                     case sf::Keyboard::D:
-                        mino->Move(right);
+                        try {
+                            mino->Move(right);
+                        }
+                        catch (...) {}
                         break;
                     case sf::Keyboard::A:
-                        mino->Move(left);
+                        try {
+                            mino->Move(left);
+                        }
+                        catch (...) {}
                         break;
                     case sf::Keyboard::Space:
                         mino->Move(hardDrop);
