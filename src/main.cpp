@@ -1,5 +1,10 @@
+//TODO: 
+// [] fix line clear
+// [] implement rotation
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <stdlib.h>
 #include <map>
 #include <vector>
 
@@ -11,7 +16,7 @@ bool isDropping = true;
 class Mino;
 
 std::vector<Mino*> Minos;
-bool MapPlaces[10][20];
+bool MapPlaces[10][23];
 
 enum Directions {
     left, right, down, hardDrop
@@ -19,6 +24,7 @@ enum Directions {
 enum Colors {
     red, green, blue, orange, yellow, cyan, purple
 };
+
 
 class Mino
 {
@@ -51,7 +57,7 @@ void Mino::Move(Directions direction) {
     bool finished = false;
     switch (direction) {
     case down:
-        if (MapPlaces[this->getPositionX()][this->getPositionY() + 1] == false && this->getPositionY() != PlayAreaHeight - 1) {
+        if (MapPlaces[this->getPositionX()][this->getPositionY() + 4] != true && this->getPositionY() != PlayAreaHeight - 1) {
             this->Y++;
             block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
         }
@@ -60,7 +66,7 @@ void Mino::Move(Directions direction) {
         }
         break;
     case right:
-        if (this->X < PlayAreaWidth-1 && MapPlaces[this->getPositionX()+1][this->getPositionY()] != true) {
+        if (this->X < PlayAreaWidth-1 && MapPlaces[this->getPositionX()+1][this->getPositionY()+3] != true) {
             this->X++;
             block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
         }
@@ -69,7 +75,7 @@ void Mino::Move(Directions direction) {
         }
         break;
     case left:
-        if (this->X > 0 && MapPlaces[this->getPositionX() - 1][this->getPositionY()] != true) {
+        if (this->X > 0 && MapPlaces[this->getPositionX() - 1][this->getPositionY()+3] != true) {
             X--;
             block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
         }
@@ -77,31 +83,7 @@ void Mino::Move(Directions direction) {
             throw("left");
         }
         break;
-    //case hardDrop:
-    //    /*for (int i = this->getPositionY(); i < 20; i++) {
-    //            if (MapPlaces[this->getPositionX()][i+1] == true || i == 19) {
-    //                std::cout << "I: " << i << std::endl;
-    //                this->Y = i;
-    //                Minos.push_back(this);
-    //                MapPlaces[this->getPositionX()][this->getPositionY()] = true;
-    //                break;
-    //            }
-    //        
-    //    }*/
-
-    //    while (!finished) {
-    //        if (MapPlaces[this->getPositionX()][this->getPositionY() + 1] == false && this->getPositionY() != PlayAreaHeight - 1) {
-    //            this->Y++;
-    //            block.setPosition(sf::Vector2f(this->X * 32.0f, this->Y * 32.0f));
-    //        }
-    //        else {
-    //            finished = true;
-    //            Minos.push_back(this);
-    //                MapPlaces[this->getPositionX()][this->getPositionY()] = true;
-    //        }
-    //    }
-    //    block.setPosition(sf::Vector2f(this->X*32.0f, this->Y*32.0f));
-    //    break;
+   
     }
 }
 
@@ -111,8 +93,10 @@ public:
     Tetromino(Colors color, const sf::Texture& texture);
     Tetromino() {};
     void Move(Directions direction);
+    virtual void Rotate() {}
     //virtual ~Tetromino() {}
     std::vector<Mino*> blocks;
+    int rotation = 0;
 };
 
 Tetromino::Tetromino(Colors color, const sf::Texture& texture)
@@ -123,7 +107,6 @@ Tetromino::Tetromino(Colors color, const sf::Texture& texture)
         el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
         blocks.push_back(el);
     }
-
 }
 void Tetromino::Move(Directions direction) {
     std::vector<Mino> saveState;
@@ -150,9 +133,9 @@ void Tetromino::Move(Directions direction) {
                 blocks[i]->block.setPosition(sf::Vector2f(blocks[i]->getPositionX() * 32.0f, blocks[i]->getPositionY() * 32.0f));
             }
             isDropping = false;
-            for (auto& el : this->blocks) {
+            for (const auto& el : this->blocks) {
                 Minos.push_back(el);
-                MapPlaces[el->getPositionX()][el->getPositionY()] = true;
+                MapPlaces[el->getPositionX()][el->getPositionY()+3] = true;
             }
         }
         
@@ -172,7 +155,7 @@ void Tetromino::Move(Directions direction) {
             isDropping = false;
             for (auto& el : this->blocks) {
                 Minos.push_back(el);
-                MapPlaces[el->getPositionX()][el->getPositionY()] = true;
+                MapPlaces[el->getPositionX()][el->getPositionY()+3] = true;
             }
         }
         catch (...) {
@@ -191,16 +174,16 @@ class LShape : public Tetromino
 public:
     LShape(Colors color, const sf::Texture& texture) : Tetromino{color, texture} {
 
-        this->blocks[0]->setPositionX(4);
-        this->blocks[0]->setPositionY(0);
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-1);
 
-        this->blocks[1]->setPositionX(5);
-        this->blocks[1]->setPositionY(0);
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-1);
 
-        this->blocks[2]->setPositionX(4);
+        this->blocks[2]->setPositionX(5);
         this->blocks[2]->setPositionY(-1);
 
-         this->blocks[3]->setPositionX(4);
+         this->blocks[3]->setPositionX(5);
         this->blocks[3]->setPositionY(-2);
 
         for (auto& el : blocks) {
@@ -209,41 +192,681 @@ public:
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
         }
     }
-   // ~LShape();
+
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+            case 0:
+                //     #      #
+                // # # #  =>  #
+                //            # #
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX());
+                blocks[0]->setPositionY(blocks[1]->getPositionY()-1);
+            
+                blocks[2]->setPositionX(blocks[1]->getPositionX());
+                blocks[2]->setPositionY(blocks[1]->getPositionY()+1);
+            
+                blocks[3]->setPositionX(blocks[1]->getPositionX()+1);
+                blocks[3]->setPositionY(blocks[1]->getPositionY()+1);
+
+                rotation = 1;
+                break;
+            case 1:
+
+                // #
+                // #   =>  # # # 
+                // # #     #
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+                blocks[0]->setPositionY(blocks[1]->getPositionY());
+                
+                blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+                blocks[2]->setPositionY(blocks[1]->getPositionY());
+                
+                blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+                blocks[3]->setPositionY(blocks[1]->getPositionY()+1);
+
+                rotation = 2;
+                break;
+
+            case 2:
+                
+                //            # #
+                // # # #   =>   # 
+                // #            #  
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX());
+                blocks[0]->setPositionY(blocks[1]->getPositionY()+1);
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX());
+                blocks[2]->setPositionY(blocks[1]->getPositionY()-1);
+                
+                blocks[3]->setPositionX(blocks[1]->getPositionX()-1);
+                blocks[3]->setPositionY(blocks[1]->getPositionY()-1);
+
+                rotation = 3;
+                break;
+            case 3:
+
+                // # #          #
+                //   #   => # # #
+                //   #
+                blocks[0]->setPositionX(blocks[1]->getPositionX()-1);
+                blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX()+1);
+                blocks[2]->setPositionY(blocks[1]->getPositionY());
+                
+                blocks[3]->setPositionX(blocks[1]->getPositionX()+1);
+                blocks[3]->setPositionY(blocks[1]->getPositionY()-1);
+
+                rotation = 0;
+                break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX()*32.0f, el->getPositionY()*32.0f));
+        }
+    }
+private:
+
+};
+
+class JShape : public Tetromino
+{
+public:
+    JShape(Colors color, const sf::Texture& texture) : Tetromino{color, texture} {
+
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-1);
+
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-1);
+
+        this->blocks[2]->setPositionX(5);
+        this->blocks[2]->setPositionY(-1);
+
+        this->blocks[3]->setPositionX(3);
+        this->blocks[3]->setPositionY(-2);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+        case 0:
+            // #          # #
+            // # # #  =>  #
+            //            # 
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 1;
+            break;
+        case 1:
+
+            // # #
+            // #   =>  # # # 
+            // #           #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 2;
+            break;
+
+        case 2:
+
+            //              #
+            // # # #   =>   # 
+            //     #      # #  
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 3;
+            break;
+        case 3:
+
+            //   #      #    
+            //   #   => # # #
+            // # #
+            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 0;
+            break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
 
 private:
 
 };
 
-//LShape::LShape(Colors color, const sf::Texture& texture) : Tetromino()
-//{
-//
-//   
-//    
-//}
+class OShape : public Tetromino
+{
+public:
+    OShape(Colors color, const sf::Texture& texture) : Tetromino{color, texture} {
+
+        this->blocks[0]->setPositionX(4);
+        this->blocks[0]->setPositionY(-1);
+
+        this->blocks[1]->setPositionX(5);
+        this->blocks[1]->setPositionY(-1);
+
+        this->blocks[2]->setPositionX(4);
+        this->blocks[2]->setPositionY(-2);
+
+         this->blocks[3]->setPositionX(5);
+        this->blocks[3]->setPositionY(-2);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+
+private:
+
+};
+
+class SShape : public Tetromino
+{
+public:
+    SShape(Colors color, const sf::Texture& texture) : Tetromino{ color, texture } {
+
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-1);
+
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-1);
+
+        this->blocks[2]->setPositionX(4);
+        this->blocks[2]->setPositionY(-2);
+
+        this->blocks[3]->setPositionX(5);
+        this->blocks[3]->setPositionY(-2);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+        case 0:
+            //   # #      #
+            // # #    =>  # #
+            //              #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 1;
+            break;
+        case 1:
+
+            // #           # #
+            // # #   =>  # #
+            //   #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 2;
+            break;
+
+        case 2:
+
+            //   # #      #
+            // # #    =>  # #
+            //              #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() -1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 3;
+            break;
+        case 3:
+
+            // #           # #
+            // # #   =>  # #
+            //   #
+            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 0;
+            break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+private:
+
+};
+
+class ZShape : public Tetromino
+{
+public:
+    ZShape(Colors color, const sf::Texture& texture) : Tetromino{ color, texture } {
+
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-2);
+
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-2);
+
+        this->blocks[2]->setPositionX(4);
+        this->blocks[2]->setPositionY(-1);
+
+        this->blocks[3]->setPositionX(5);
+        this->blocks[3]->setPositionY(-1);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+        case 0:
+            // # #          #
+            //   # #  =>  # #
+            //            #  
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 1;
+            break;
+        case 1:
+
+            //   #       # #
+            // # #  =>     # #
+            // #  
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 2;
+            break;
+
+        case 2:
+
+            // # #          #
+            //   # #  =>  # #
+            //            #  
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 3;
+            break;
+        case 3:
+
+            //   #       # #
+            // # #  =>     # #
+            // #  
+            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 0;
+            break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+private:
+
+};
+
+class TShape : public Tetromino
+{
+public:
+    TShape(Colors color, const sf::Texture& texture) : Tetromino{ color, texture } {
+
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-1);
+
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-1);
+
+        this->blocks[2]->setPositionX(5);
+        this->blocks[2]->setPositionY(-1);
+
+        this->blocks[3]->setPositionX(4);
+        this->blocks[3]->setPositionY(-2);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+        case 0:
+            //    #         #
+            //  # # #   =>  # #
+            //              #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+            rotation = 1;
+            break;
+        case 1:
+
+            // #
+            // # #  => # # #
+            // #         #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX());
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            rotation = 2;
+            break;
+
+        case 2:
+
+            //             #
+            // # # #  => # #
+            //   #         #
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+            rotation = 3;
+            break;
+        case 3:
+
+            //   #       #
+            // # #  => # # #
+            //   #       
+            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX());
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            rotation = 0;
+            break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+private:
+
+};
+
+class IShape : public Tetromino
+{
+public:
+    IShape(Colors color, const sf::Texture& texture) : Tetromino{ color, texture } {
+
+        this->blocks[0]->setPositionX(3);
+        this->blocks[0]->setPositionY(-1);
+
+        this->blocks[1]->setPositionX(4);
+        this->blocks[1]->setPositionY(-1);
+
+        this->blocks[2]->setPositionX(5);
+        this->blocks[2]->setPositionY(-1);
+
+        this->blocks[3]->setPositionX(6);
+        this->blocks[3]->setPositionY(-1);
+
+        for (auto& el : blocks) {
+            el->block.setTexture(texture);
+            el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+    virtual void Rotate() {
+        std::cout << "Rotacja: " << rotation << std::endl;
+        switch (rotation) {
+
+        case 0:
+            //              #
+            // # # # #   => # 
+            //              #
+            //              #
+
+            blocks[1]->setPositionX(blocks[1]->getPositionX() + 1);
 
 
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
 
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX());
+            blocks[3]->setPositionY(blocks[1]->getPositionY() + 2);
+
+            rotation = 1;
+            break;
+        case 1:
+
+            // #           
+            // #   =>  
+            // #       # # # #
+            // #
+
+            blocks[1]->setPositionY(blocks[1]->getPositionY() + 1);
+
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() - 2);
+            blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+            rotation = 2;
+            break;
+
+        case 2:
+            
+            //               #
+            //          =>   #
+            // # # # #       #
+            //               #
+
+            blocks[1]->setPositionX(blocks[1]->getPositionX() - 1);
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX());
+            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX());
+            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX());
+            blocks[3]->setPositionY(blocks[1]->getPositionY() - 2);
+
+            rotation = 3;
+            break;
+        case 3:
+
+            // #           
+            // #   =>  
+            // #       # # # #
+            // #
+
+            blocks[1]->setPositionY(blocks[1]->getPositionY() - 1);
+
+            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+            blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+            blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+            blocks[3]->setPositionX(blocks[1]->getPositionX() + 2);
+            blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+            rotation = 0;
+            break;
+        }
+        for (auto& el : blocks) {
+            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+        }
+    }
+
+private:
+
+};
 
 int main()
 {
+    srand(time(0));
     sf::Texture texture;
     texture.loadFromFile("../../assets/TileTextures.png");
-    sf::RenderWindow window(sf::VideoMode(1280, 720), "Tetris");
-    Mino* test = new Mino(purple, 5, 7, texture);
-    MapPlaces[5][7] = true;
-    Minos.push_back(test);
+    sf::RenderWindow window(sf::VideoMode(320, 640), "Tetris");
     sf::Clock clock;
     int count = 0;
     while (window.isOpen())
     {
         count++;
-        LShape* mino;
-        if (count % 2 == 0) {
-            mino = new LShape(red, texture);
-        }
-        else {
-            mino = new LShape(green, texture);
+        Tetromino* mino;
+        switch (rand() % 7) {
+        case 0:
+            mino = new LShape(orange, texture);
+            break;
+        case 1:
+            mino = new JShape(blue, texture);
+            break;
+        case 2:
+            mino = new OShape(yellow, texture);
+            break;
+        case 3: 
+            mino = new SShape(green, texture);
+            break;
+        case 4: 
+            mino = new ZShape(red, texture);
+            break;
+        case 5: 
+            mino = new TShape(purple, texture);
+            break;
+        case 6: 
+            mino = new IShape(cyan, texture);
+            break;
         }
         isDropping = true;
         while (isDropping) {
@@ -254,7 +877,7 @@ int main()
             if (time.asMilliseconds() >= 400) {
                 mino->Move(down);
                 clock.restart();
-                std::cout << mino->blocks[0]->getPositionY() << " " << mino->blocks[0]->getPositionX() << std::endl;
+                std::cout << mino->blocks[3]->getPositionY() << " " << mino->blocks[3]->getPositionX() << std::endl;
             }
             while (window.pollEvent(event))
             {
@@ -265,6 +888,9 @@ int main()
 
                 if (event.type == event.KeyPressed) {
                     switch (event.key.code) {
+                    case sf::Keyboard::W:
+                        mino->Rotate();
+                        break;
                     case sf::Keyboard::S:
                         mino->Move(down);                       
                         break;
@@ -304,6 +930,48 @@ int main()
             }
             window.clear();
         }
+        std::vector<int> rowsToClear;
+        for (int i = 3; i < PlayAreaHeight+3; i++) {
+            int tmp = 0;
+            for (int j = 0; j < PlayAreaWidth; j++) {
+                if (MapPlaces[j][i]) {
+                    tmp++;
+                }
+            }
+            if (tmp == 10) {
+                std::cout << "linia do usuniecia: " << i - 3 << std::endl;
+                rowsToClear.push_back(i-3);
+            }
+        }
+
+        std::vector<Mino*> temp;
+        for (const auto& Y : rowsToClear) {
+            for (const auto& el : Minos) {
+                if (el->getPositionY() == Y) {
+                    temp.push_back(el);
+                }
+            }
+        }
+        for (const auto& el : temp) {
+            std::vector<Mino*>::iterator it;
+            MapPlaces[el->getPositionX()][el->getPositionY() + 3] = false;
+            it = std::remove(Minos.begin(), Minos.end(), el);
+        }
+        temp.clear();
+
+        for (const auto& Y : rowsToClear) {
+            for (auto& el : Minos) {
+                MapPlaces[el->getPositionX()][el->getPositionY() + 3] = false;
+                if (el->getPositionY() < Y) {
+                    el->setPositionY(el->getPositionY()+1);
+                    el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+                }
+            }
+        }
+        for (const auto& el : Minos) {
+            MapPlaces[el->getPositionX()][el->getPositionY() + 3] = true;
+        }
+        
     }
 
     return 0;
