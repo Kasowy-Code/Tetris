@@ -1,7 +1,3 @@
-//TODO: 
-// [] fix line clear
-// [] implement rotation
-
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <stdlib.h>
@@ -93,8 +89,7 @@ public:
     Tetromino(Colors color, const sf::Texture& texture);
     Tetromino() {};
     void Move(Directions direction);
-    virtual void Rotate() {}
-    //virtual ~Tetromino() {}
+    virtual void Rotate();
     std::vector<Mino*> blocks;
     int rotation = 0;
 };
@@ -169,6 +164,39 @@ void Tetromino::Move(Directions direction) {
     }
 }
 
+void Tetromino::Rotate() {
+    std::vector<Mino> saveState;
+    for (const auto& el : blocks) {
+        saveState.push_back(*el);
+    }
+
+    Mino temp = *blocks[1];
+    try {
+        for (auto& el : blocks) {
+            int x = el->getPositionY() - temp.getPositionY();
+            int y = el->getPositionX() - temp.getPositionX();
+
+            el->setPositionX(temp.getPositionX() - x);
+            el->setPositionY(temp.getPositionY() + y);
+            if (MapPlaces[el->getPositionX()][el->getPositionY() + 3] || el->getPositionX() < 0 || el->getPositionX() > PlayAreaWidth-1) {
+                throw 1;
+            }
+        }
+    }
+    catch (...) {
+        for (int i = 0; i < 4; i++) {
+            blocks[i]->setPositionX(saveState[i].getPositionX());
+            blocks[i]->setPositionY(saveState[i].getPositionY());
+        }
+    }
+
+    for (auto& el : blocks) {
+        el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+    }
+}
+
+
+
 class LShape : public Tetromino
 {
 public:
@@ -190,83 +218,6 @@ public:
             el->block.setTexture(texture);
             el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
-        }
-    }
-
-    virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-            case 0:
-                //     #      #
-                // # # #  =>  #
-                //            # #
-
-                blocks[0]->setPositionX(blocks[1]->getPositionX());
-                blocks[0]->setPositionY(blocks[1]->getPositionY()-1);
-            
-                blocks[2]->setPositionX(blocks[1]->getPositionX());
-                blocks[2]->setPositionY(blocks[1]->getPositionY()+1);
-            
-                blocks[3]->setPositionX(blocks[1]->getPositionX()+1);
-                blocks[3]->setPositionY(blocks[1]->getPositionY()+1);
-
-                rotation = 1;
-                break;
-            case 1:
-
-                // #
-                // #   =>  # # # 
-                // # #     #
-
-                blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-                blocks[0]->setPositionY(blocks[1]->getPositionY());
-                
-                blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
-                blocks[2]->setPositionY(blocks[1]->getPositionY());
-                
-                blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-                blocks[3]->setPositionY(blocks[1]->getPositionY()+1);
-
-                rotation = 2;
-                break;
-
-            case 2:
-                
-                //            # #
-                // # # #   =>   # 
-                // #            #  
-
-                blocks[0]->setPositionX(blocks[1]->getPositionX());
-                blocks[0]->setPositionY(blocks[1]->getPositionY()+1);
-
-                blocks[2]->setPositionX(blocks[1]->getPositionX());
-                blocks[2]->setPositionY(blocks[1]->getPositionY()-1);
-                
-                blocks[3]->setPositionX(blocks[1]->getPositionX()-1);
-                blocks[3]->setPositionY(blocks[1]->getPositionY()-1);
-
-                rotation = 3;
-                break;
-            case 3:
-
-                // # #          #
-                //   #   => # # #
-                //   #
-                blocks[0]->setPositionX(blocks[1]->getPositionX()-1);
-                blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-                blocks[2]->setPositionX(blocks[1]->getPositionX()+1);
-                blocks[2]->setPositionY(blocks[1]->getPositionY());
-                
-                blocks[3]->setPositionX(blocks[1]->getPositionX()+1);
-                blocks[3]->setPositionY(blocks[1]->getPositionY()-1);
-
-                rotation = 0;
-                break;
-        }
-        for (auto& el : blocks) {
-            el->block.setPosition(sf::Vector2f(el->getPositionX()*32.0f, el->getPositionY()*32.0f));
         }
     }
 private:
@@ -293,82 +244,6 @@ public:
         for (auto& el : blocks) {
             el->block.setTexture(texture);
             el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
-            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
-        }
-    }
-    virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-        case 0:
-            // #          # #
-            // # # #  =>  #
-            //            # 
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 1;
-            break;
-        case 1:
-
-            // # #
-            // #   =>  # # # 
-            // #           #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 2;
-            break;
-
-        case 2:
-
-            //              #
-            // # # #   =>   # 
-            //     #      # #  
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 3;
-            break;
-        case 3:
-
-            //   #      #    
-            //   #   => # # #
-            // # #
-            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 0;
-            break;
-        }
-        for (auto& el : blocks) {
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
         }
     }
@@ -428,82 +303,6 @@ public:
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
         }
     }
-    virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-        case 0:
-            //   # #      #
-            // # #    =>  # #
-            //              #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 1;
-            break;
-        case 1:
-
-            // #           # #
-            // # #   =>  # #
-            //   #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 2;
-            break;
-
-        case 2:
-
-            //   # #      #
-            // # #    =>  # #
-            //              #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() -1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 3;
-            break;
-        case 3:
-
-            // #           # #
-            // # #   =>  # #
-            //   #
-            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 0;
-            break;
-        }
-        for (auto& el : blocks) {
-            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
-        }
-    }
 private:
 
 };
@@ -531,82 +330,6 @@ public:
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
         }
     }
-    virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-        case 0:
-            // # #          #
-            //   # #  =>  # #
-            //            #  
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 1;
-            break;
-        case 1:
-
-            //   #       # #
-            // # #  =>     # #
-            // #  
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 2;
-            break;
-
-        case 2:
-
-            // # #          #
-            //   # #  =>  # #
-            //            #  
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 3;
-            break;
-        case 3:
-
-            //   #       # #
-            // # #  =>     # #
-            // #  
-            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 0;
-            break;
-        }
-        for (auto& el : blocks) {
-            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
-        }
-    }
 private:
 
 };
@@ -631,82 +354,6 @@ public:
         for (auto& el : blocks) {
             el->block.setTexture(texture);
             el->block.setTextureRect(sf::IntRect(color * 32, 0, 32, 32));
-            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
-        }
-    }
-    virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-        case 0:
-            //    #         #
-            //  # # #   =>  # #
-            //              #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY());
-
-            rotation = 1;
-            break;
-        case 1:
-
-            // #
-            // # #  => # # #
-            // #         #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX());
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            rotation = 2;
-            break;
-
-        case 2:
-
-            //             #
-            // # # #  => # #
-            //   #         #
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[3]->setPositionY(blocks[1]->getPositionY());
-
-            rotation = 3;
-            break;
-        case 3:
-
-            //   #       #
-            // # #  => # # #
-            //   #       
-            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX());
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            rotation = 0;
-            break;
-        }
-        for (auto& el : blocks) {
             el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
         }
     }
@@ -738,94 +385,118 @@ public:
         }
     }
     virtual void Rotate() {
-        std::cout << "Rotacja: " << rotation << std::endl;
-        switch (rotation) {
-
-        case 0:
-            //              #
-            // # # # #   => # 
-            //              #
-            //              #
-
-            blocks[1]->setPositionX(blocks[1]->getPositionX() + 1);
-
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX());
-            blocks[3]->setPositionY(blocks[1]->getPositionY() + 2);
-
-            rotation = 1;
-            break;
-        case 1:
-
-            // #           
-            // #   =>  
-            // #       # # # #
-            // #
-
-            blocks[1]->setPositionY(blocks[1]->getPositionY() + 1);
-
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() - 2);
-            blocks[3]->setPositionY(blocks[1]->getPositionY());
-
-            rotation = 2;
-            break;
-
-        case 2:
-            
-            //               #
-            //          =>   #
-            // # # # #       #
-            //               #
-
-            blocks[1]->setPositionX(blocks[1]->getPositionX() - 1);
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX());
-            blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX());
-            blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX());
-            blocks[3]->setPositionY(blocks[1]->getPositionY() - 2);
-
-            rotation = 3;
-            break;
-        case 3:
-
-            // #           
-            // #   =>  
-            // #       # # # #
-            // #
-
-            blocks[1]->setPositionY(blocks[1]->getPositionY() - 1);
-
-            blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
-            blocks[0]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
-            blocks[2]->setPositionY(blocks[1]->getPositionY());
-
-            blocks[3]->setPositionX(blocks[1]->getPositionX() + 2);
-            blocks[3]->setPositionY(blocks[1]->getPositionY());
-
-            rotation = 0;
-            break;
+        std::vector<Mino> saveState;
+        for (const auto& el : blocks) {
+            saveState.push_back(*el);
         }
-        for (auto& el : blocks) {
-            el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+
+        try {
+            switch (rotation) {
+
+            case 0:
+                //              #
+                // # # # #   => # 
+                //              #
+                //              #
+
+                blocks[1]->setPositionX(blocks[1]->getPositionX() + 1);
+
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX());
+                blocks[0]->setPositionY(blocks[1]->getPositionY() - 1);
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX());
+                blocks[2]->setPositionY(blocks[1]->getPositionY() + 1);
+
+                blocks[3]->setPositionX(blocks[1]->getPositionX());
+                blocks[3]->setPositionY(blocks[1]->getPositionY() + 2);
+
+                rotation = 1;
+                break;
+            case 1:
+
+                // #           
+                // #   =>  
+                // #       # # # #
+                // #
+
+                blocks[1]->setPositionY(blocks[1]->getPositionY() + 1);
+
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX() + 1);
+                blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX() - 1);
+                blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+                blocks[3]->setPositionX(blocks[1]->getPositionX() - 2);
+                blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+                rotation = 2;
+                break;
+
+            case 2:
+
+                //               #
+                //          =>   #
+                // # # # #       #
+                //               #
+
+                blocks[1]->setPositionX(blocks[1]->getPositionX() - 1);
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX());
+                blocks[0]->setPositionY(blocks[1]->getPositionY() + 1);
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX());
+                blocks[2]->setPositionY(blocks[1]->getPositionY() - 1);
+
+                blocks[3]->setPositionX(blocks[1]->getPositionX());
+                blocks[3]->setPositionY(blocks[1]->getPositionY() - 2);
+
+                rotation = 3;
+                break;
+            case 3:
+
+                // #           
+                // #   =>  
+                // #       # # # #
+                // #
+
+                blocks[1]->setPositionY(blocks[1]->getPositionY() - 1);
+
+                blocks[0]->setPositionX(blocks[1]->getPositionX() - 1);
+                blocks[0]->setPositionY(blocks[1]->getPositionY());
+
+                blocks[2]->setPositionX(blocks[1]->getPositionX() + 1);
+                blocks[2]->setPositionY(blocks[1]->getPositionY());
+
+                blocks[3]->setPositionX(blocks[1]->getPositionX() + 2);
+                blocks[3]->setPositionY(blocks[1]->getPositionY());
+
+                rotation = 0;
+                break;
+            }
+            for (auto& el : blocks) {
+                if (MapPlaces[el->getPositionX()][el->getPositionY() + 3] || el->getPositionX() < 0 || el->getPositionX() > PlayAreaWidth - 1) {
+                    throw 1;
+                }
+            }
+
+            for (auto& el : blocks) {
+                el->block.setPosition(sf::Vector2f(el->getPositionX() * 32.0f, el->getPositionY() * 32.0f));
+            }
+        }
+        catch (...) {
+            if (rotation == 0) {
+                rotation = 3;
+            }
+            else {
+                rotation--;
+            }
+            for (int i = 0; i < 4; i++) {
+                blocks[i]->setPositionX(saveState[i].getPositionX());
+                blocks[i]->setPositionY(saveState[i].getPositionY());
+            }
         }
     }
 
@@ -955,7 +626,7 @@ int main()
         for (const auto& el : temp) {
             std::vector<Mino*>::iterator it;
             MapPlaces[el->getPositionX()][el->getPositionY() + 3] = false;
-            it = std::remove(Minos.begin(), Minos.end(), el);
+            Minos.erase(std::remove(Minos.begin(), Minos.end(), el), Minos.end());
         }
         temp.clear();
 
