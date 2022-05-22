@@ -1,8 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <stdlib.h>
-#include <map>
 #include <vector>
+#include <sstream>
 
 const unsigned int TileSize = 32;
 const unsigned int PlayAreaWidth = 10;
@@ -511,10 +511,10 @@ int main()
     texture.loadFromFile("../../assets/TileTextures.png");
     sf::RenderWindow window(sf::VideoMode(320, 640), "Tetris");
     sf::Clock clock;
-    int count = 0;
+    unsigned int linesCleared = 0;
     while (window.isOpen())
     {
-        count++;
+
         Tetromino* mino;
         switch (rand() % 7) {
         case 0:
@@ -548,7 +548,6 @@ int main()
             if (time.asMilliseconds() >= 400) {
                 mino->Move(down);
                 clock.restart();
-                std::cout << mino->blocks[3]->getPositionY() << " " << mino->blocks[3]->getPositionX() << std::endl;
             }
             while (window.pollEvent(event))
             {
@@ -610,7 +609,7 @@ int main()
                 }
             }
             if (tmp == 10) {
-                std::cout << "linia do usuniecia: " << i - 3 << std::endl;
+                linesCleared++;
                 rowsToClear.push_back(i-3);
             }
         }
@@ -643,6 +642,63 @@ int main()
             MapPlaces[el->getPositionX()][el->getPositionY() + 3] = true;
         }
         
+        for (int i = 0; i < PlayAreaWidth; i++) {
+            if (MapPlaces[i][0] == true || MapPlaces[i][1] == true || MapPlaces[i][2] == true) {
+                sf::Event event2;
+                bool userInput = false;
+                bool isDrawn = false;
+                while (!userInput) {
+                    while (window.pollEvent(event2)) {
+                        if (event2.type == event2.KeyPressed || event2.type == event2.Closed) {
+                            userInput = true;
+                            Minos.clear();
+                            rowsToClear.clear();
+                            for (int j = 0; j < PlayAreaWidth; j++) {
+                                for (int k = 0; k < PlayAreaHeight+3; k++) {
+                                    MapPlaces[j][k] = false;
+                                }
+                            }
+
+                            window.clear();
+                        }
+                    }
+                    sf::RectangleShape bg(sf::Vector2f(320.0f, 160.0f));
+                    bg.setFillColor(sf::Color(255, 255, 255));
+
+                    bg.setPosition(sf::Vector2f(0.0f, 200.0f));
+
+                    std::stringstream txt;
+                    txt << "Lines cleared: " << linesCleared;
+                    sf::Font font;
+                    font.loadFromFile("../../assets/arial.ttf");
+                    sf::Text GameOver;
+                    sf::Text Score;
+                    GameOver.setFont(font);
+                    Score.setFont(font);
+                    GameOver.setString("Game Over");
+                    Score.setString(txt.str());
+                    GameOver.setPosition(sf::Vector2f(100.0f, 240.0f));
+                    Score.setPosition(sf::Vector2f(100.0f, 300.0f));
+                    GameOver.setCharacterSize(24);
+                    Score.setCharacterSize(24);
+                    GameOver.setFillColor(sf::Color(255, 0, 0));
+                    Score.setFillColor(sf::Color(255, 0, 0));
+
+                    if (!isDrawn) {
+                        for (auto el : Minos) {
+                            window.draw(el->block);
+                        }
+                        window.draw(bg);
+                        window.draw(GameOver);
+                        window.draw(Score);
+
+                        window.display();
+                        isDrawn = true;
+                    }
+                }
+                break;
+            }
+        }
     }
 
     return 0;
